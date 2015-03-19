@@ -210,9 +210,9 @@ public class DoorsModule extends JavaModule {
             door.getWorld().playEffect(door.getLocation(), Effect.DOOR_TOGGLE, 0);
 
             // Only change the block above it if it is something we can open or close
-            if (isValid(topHalf.getType())) {
+            /*if (isValid(topHalf.getType())) {
                 topHalf.setData((byte) (topHalf.getData() ^ 0x4));
-            }
+            }*/
         }
     }
 
