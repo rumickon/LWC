@@ -28,24 +28,6 @@
 
 package com.griefcraft.lwc;
 
-import com.griefcraft.listeners.LWCBlockListener;
-import com.griefcraft.listeners.LWCEntityListener;
-import com.griefcraft.listeners.LWCPlayerListener;
-import com.griefcraft.listeners.LWCServerListener;
-import com.griefcraft.scripting.event.LWCCommandEvent;
-import com.griefcraft.sql.Database;
-import com.griefcraft.util.StringUtil;
-import com.griefcraft.util.Updater;
-import com.griefcraft.util.locale.LWCResourceBundle;
-import com.griefcraft.util.locale.LocaleClassLoader;
-import com.griefcraft.util.locale.UTF8Control;
-import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.java.JavaPlugin;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -54,6 +36,24 @@ import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.jar.JarFile;
+
+import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import com.griefcraft.listeners.LWCBlockListener;
+import com.griefcraft.listeners.LWCEntityListener;
+import com.griefcraft.listeners.LWCPlayerListener;
+import com.griefcraft.listeners.LWCServerListener;
+import com.griefcraft.scripting.event.LWCCommandEvent;
+import com.griefcraft.sql.Database;
+import com.griefcraft.util.StringUtil;
+import com.griefcraft.util.locale.LWCResourceBundle;
+import com.griefcraft.util.locale.LocaleClassLoader;
+import com.griefcraft.util.locale.UTF8Control;
 
 public class LWCPlugin extends JavaPlugin {
 
@@ -70,7 +70,7 @@ public class LWCPlugin extends JavaPlugin {
     /**
      * LWC updater
      */
-    private Updater updater;
+    // private Updater updater;
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
@@ -190,7 +190,7 @@ public class LWCPlugin extends JavaPlugin {
     }
 
     public void onEnable() {
-        preload();
+        // preload();
         lwc = new LWC(this);
 
         LWCInfo.setVersion(getDescription().getVersion());
@@ -231,11 +231,9 @@ public class LWCPlugin extends JavaPlugin {
         // located in plugins/LWC/locale/, values in that overrides the ones in the default :-)
         ResourceBundle optionalBundle = null;
 
-        try {
+        // Open the LWC jar file
+        try (JarFile file = new JarFile(getFile())) {
             ResourceBundle defaultBundle;
-
-            // Open the LWC jar file
-            JarFile file = new JarFile(getFile());
 
             // Attempt to load the default locale
             defaultBundle = new PropertyResourceBundle(new InputStreamReader(file.getInputStream(file.getJarEntry("lang/lwc_en.properties")), "UTF-8"));
@@ -281,7 +279,7 @@ public class LWCPlugin extends JavaPlugin {
     /**
      * Load shared libraries and other misc things
      */
-    private void preload() {
+    /* private void preload() {
         updater = new Updater();
 
         // Set the SQLite native library path
@@ -290,7 +288,7 @@ public class LWCPlugin extends JavaPlugin {
         if (nativeLibraryFolder != null) {
             System.setProperty("org.sqlite.lib.path", nativeLibraryFolder);
         }
-    }
+    } */
 
     /**
      * Log a string to the console
@@ -337,9 +335,9 @@ public class LWCPlugin extends JavaPlugin {
     /**
      * @return the Updater instance
      */
-    public Updater getUpdater() {
+    /* public Updater getUpdater() {
         return updater;
-    }
+    } */
 
     @Override
     public File getFile() {

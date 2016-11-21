@@ -1551,7 +1551,7 @@ public class LWC {
             currency = new EssentialsCurrency();
         }
 
-        plugin.getUpdater().init();
+        // plugin.getUpdater().init();
 
         log("Connecting to " + Database.DefaultType);
         try {
