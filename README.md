@@ -1,10 +1,13 @@
-LWC
-======
+# LWC
 
 *The* chest (and other blocks) protection plugin.
 
-Compilation
------------
+Updated to 1.11 by @dmulloy2
+
+## Download
+[http://ci.dmulloy2.net/job/LWC/](http://ci.dmulloy2.net/job/LWC/)
+
+## Compilation
 
 We use maven to handle our dependencies.
 
