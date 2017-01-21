@@ -28,6 +28,12 @@
 
 package com.griefcraft.modules.doors;
 
+import org.bukkit.Effect;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Player;
+
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.model.Flag;
 import com.griefcraft.model.Protection;
@@ -35,12 +41,6 @@ import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCProtectionInteractEvent;
 import com.griefcraft.util.config.Configuration;
 import com.griefcraft.util.matchers.DoorMatcher;
-import com.griefcraft.util.matchers.WallMatcher;
-import org.bukkit.Effect;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Player;
 
 public class DoorsModule extends JavaModule {
 
@@ -70,7 +70,7 @@ public class DoorsModule extends JavaModule {
          * @param name
          * @return
          */
-        public static Action resolve(String name) {
+        /* public static Action resolve(String name) {
             for (Action action : values()) {
                 if (action.toString().equalsIgnoreCase(name)) {
                     return action;
@@ -78,7 +78,7 @@ public class DoorsModule extends JavaModule {
             }
 
             return null;
-        }
+        } */
 
     }
 
@@ -125,7 +125,7 @@ public class DoorsModule extends JavaModule {
 
         // Are we looking at the top half?
         // If we are, we need to get the bottom half instead
-        if (!WallMatcher.PROTECTABLES_TRAP_DOORS.contains(block.getType()) && (block.getData() & 0x8) == 0x8) {
+        if (!DoorMatcher.TRAP_DOORS.contains(block.getType()) && (block.getData() & 0x8) == 0x8) {
             // Inspect the bottom half instead, fool!
             block = block.getRelative(BlockFace.DOWN);
         }
@@ -149,7 +149,7 @@ public class DoorsModule extends JavaModule {
         }
 
         // toggle the other side of the door open
-        boolean opensWhenClicked = (DoorMatcher.WOODEN_DOORS.contains(block.getType()) || DoorMatcher.FENCE_GATES.contains(block.getType()) || block.getType() == Material.TRAP_DOOR);
+        boolean opensWhenClicked = (DoorMatcher.DOORS.contains(block.getType()) || DoorMatcher.FENCE_GATES.contains(block.getType()) || block.getType() == Material.TRAP_DOOR);
         changeDoorStates(true, (opensWhenClicked ? null : block) /* opens when clicked */, doubleDoorBlock);
 
         if (action == Action.OPEN_AND_CLOSE || protection.hasFlag(Flag.Type.AUTOCLOSE)) {
@@ -229,7 +229,7 @@ public class DoorsModule extends JavaModule {
 
         Block found;
 
-        for (Material material : DoorMatcher.PROTECTABLES_DOORS) {
+        for (Material material : DoorMatcher.DOORS) {
             if ((found = lwc.findAdjacentBlock(block, material)) != null) {
                 return found;
             }
@@ -254,19 +254,9 @@ public class DoorsModule extends JavaModule {
      * @return
      */
     private boolean isValid(Material material) {
-        if (DoorMatcher.PROTECTABLES_DOORS.contains(material)) {
-            return true;
-        }
-
-        else if (DoorMatcher.FENCE_GATES.contains(material)) {
-            return true;
-        }
-
-        if (WallMatcher.PROTECTABLES_TRAP_DOORS.contains(material)) {
-            return true;
-        }
-
-        return false;
+    	return DoorMatcher.DOORS.contains(material)
+    			|| DoorMatcher.FENCE_GATES.contains(material)
+    			|| DoorMatcher.TRAP_DOORS.contains(material);
     }
 
     /**

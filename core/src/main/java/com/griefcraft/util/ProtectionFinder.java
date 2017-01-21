@@ -180,7 +180,7 @@ public class ProtectionFinder {
         }
 
         // Doors
-        else if (DoorMatcher.PROTECTABLES_DOORS.contains(material)) {
+        else if (DoorMatcher.DOORS.contains(material)) {
             return new Matcher[] {
                     new DoorMatcher()
             };

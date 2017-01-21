@@ -28,49 +28,46 @@
 
 package com.griefcraft.util.matchers;
 
-import com.griefcraft.lwc.LWC;
-import com.griefcraft.util.ProtectionFinder;
-import com.griefcraft.util.SetUtil;
+import java.util.EnumSet;
+import java.util.Set;
+
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 
-import java.util.EnumSet;
-import java.util.Set;
+import com.griefcraft.lwc.LWC;
+import com.griefcraft.util.ProtectionFinder;
 
 /**
- * Matches doors (both Iron & Wooden)
+ * Matches doors, trapdoors, gates, and pressure plates
  */
 public class DoorMatcher implements ProtectionFinder.Matcher {
-
-    public static final Set<Material> PROTECTABLES_DOORS = EnumSet.of(Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK);
-    public static final Set<Material> WOODEN_DOORS = EnumSet.of(Material.WOODEN_DOOR); // doors that open when clicked
-    public static final Set<Material> PRESSURE_PLATES = EnumSet.of(Material.STONE_PLATE, Material.WOOD_PLATE);
-    public static final Set<Material> FENCE_GATES = EnumSet.of(Material.FENCE_GATE);
-    public static final Set<Material> TRAP_DOORS = EnumSet.of(Material.TRAP_DOOR);
+    public static final Set<Material> DOORS;
+    public static final Set<Material> PRESSURE_PLATES;
+    public static final Set<Material> FENCE_GATES;
+    public static final Set<Material> TRAP_DOORS;
 
     static {
-        // MC 1.8 blocks
-        SetUtil.addToSetWithoutNull(PROTECTABLES_DOORS, Material.getMaterial(193)); // Spruce Door
-        SetUtil.addToSetWithoutNull(PROTECTABLES_DOORS, Material.getMaterial(194)); // Birch Door
-        SetUtil.addToSetWithoutNull(PROTECTABLES_DOORS, Material.getMaterial(195)); // Jungle Door
-        SetUtil.addToSetWithoutNull(PROTECTABLES_DOORS, Material.getMaterial(196)); // Acacia Door
-        SetUtil.addToSetWithoutNull(PROTECTABLES_DOORS, Material.getMaterial(197)); // Dark Oak Door
+    	DOORS = EnumSet.noneOf(Material.class);
+    	PRESSURE_PLATES = EnumSet.noneOf(Material.class);
+    	FENCE_GATES = EnumSet.noneOf(Material.class);
+    	TRAP_DOORS = EnumSet.noneOf(Material.class);
 
-        SetUtil.addToSetWithoutNull(WOODEN_DOORS, Material.getMaterial(193)); // Spruce Door
-        SetUtil.addToSetWithoutNull(WOODEN_DOORS, Material.getMaterial(194)); // Birch Door
-        SetUtil.addToSetWithoutNull(WOODEN_DOORS, Material.getMaterial(195)); // Jungle Door
-        SetUtil.addToSetWithoutNull(WOODEN_DOORS, Material.getMaterial(196)); // Acacia Door
-        SetUtil.addToSetWithoutNull(WOODEN_DOORS, Material.getMaterial(197)); // Dark Oak Door
-
-        SetUtil.addToSetWithoutNull(FENCE_GATES, Material.getMaterial(183)); // Spruce Fence Gate
-        SetUtil.addToSetWithoutNull(FENCE_GATES, Material.getMaterial(184)); // Birch Fence Gate
-        SetUtil.addToSetWithoutNull(FENCE_GATES, Material.getMaterial(185)); // Jungle Fence Gate
-        SetUtil.addToSetWithoutNull(FENCE_GATES, Material.getMaterial(186)); // Dark Oak Fence Gate
-        SetUtil.addToSetWithoutNull(FENCE_GATES, Material.getMaterial(187)); // Acacia Fence Gate
-
-        SetUtil.addToSetWithoutNull(TRAP_DOORS, Material.getMaterial(167)); // Iron trap door
+    	for (Material material : Material.values()) {
+    		String name = material.name();
+    		if (name.contains("DOOR") && !name.contains("ITEM")) {
+    			if (name.contains("TRAP")) {
+    				TRAP_DOORS.add(material);
+    			} else {
+    				DOORS.add(material);
+    			}
+    		} else if (name.contains("GATE") && !name.contains("END")) {
+    			FENCE_GATES.add(material);
+    		} else if (name.contains("_PLATE")) {
+    			PRESSURE_PLATES.add(material);
+    		}
+    	}
     }
 
     private static final BlockFace[] faces = new BlockFace[] {
@@ -95,7 +92,7 @@ public class DoorMatcher implements ProtectionFinder.Matcher {
                 Block relative = pressurePlate.getRelative(face);
 
                 // only check if it's a door
-                if (!PROTECTABLES_DOORS.contains(relative.getType())) {
+                if (!DOORS.contains(relative.getType())) {
                     continue;
                 }
 
@@ -117,7 +114,7 @@ public class DoorMatcher implements ProtectionFinder.Matcher {
         }
 
         // Match the block UNDER the door
-        if(PROTECTABLES_DOORS.contains(aboveAboveBaseBlock.getType()) && PROTECTABLES_DOORS.contains(aboveBaseBlock.getType())) {
+        if (DOORS.contains(aboveAboveBaseBlock.getType()) && DOORS.contains(aboveBaseBlock.getType())) {
             finder.addBlock(aboveAboveBaseBlock);
             finder.addBlock(aboveBaseBlock);
             findPressurePlate(finder, aboveBaseBlock);
@@ -125,7 +122,7 @@ public class DoorMatcher implements ProtectionFinder.Matcher {
         }
 
         // Match the bottom half of the door
-        else if (PROTECTABLES_DOORS.contains(aboveBaseBlock.getType())) {
+        else if (DOORS.contains(aboveBaseBlock.getType())) {
             finder.addBlock(aboveBaseBlock);
             finder.addBlock(block.getRelative(BlockFace.DOWN));
             findPressurePlate(finder, block);
@@ -133,7 +130,7 @@ public class DoorMatcher implements ProtectionFinder.Matcher {
         }
 
         // Match the top half of the door
-        else if (PROTECTABLES_DOORS.contains(baseBlockState.getType())) {
+        else if (DOORS.contains(baseBlockState.getType())) {
             Block bottomHalf = block.getRelative(BlockFace.DOWN);
 
             finder.addBlock(bottomHalf);
