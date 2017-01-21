@@ -1397,6 +1397,10 @@ public class LWC {
         names.add("*");
         names.add(material.getId() + ":*");
 
+        if (materialName.contains("_")) { // Prefix wildcarding for shulker boxes & gates
+        	names.add("*_" + materialName.substring(materialName.indexOf("_") + 1));
+        }
+
         String value = configuration.getString("protections." + node);
 
         for (String name : names) {
