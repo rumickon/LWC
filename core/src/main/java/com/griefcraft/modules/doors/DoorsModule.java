@@ -149,8 +149,12 @@ public class DoorsModule extends JavaModule {
         }
 
         // toggle the other side of the door open
-        boolean opensWhenClicked = (DoorMatcher.DOORS.contains(block.getType()) || DoorMatcher.FENCE_GATES.contains(block.getType()) || block.getType() == Material.TRAP_DOOR);
-        changeDoorStates(true, (opensWhenClicked ? null : block) /* opens when clicked */, doubleDoorBlock);
+        // wooden doors and trapdoors open when you right click
+        boolean opensWhenClicked = event.getEvent().getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK &&
+        		!block.getType().name().contains("IRON");
+        changeDoorStates(true, (opensWhenClicked ? null : block), doubleDoorBlock);
+
+        // TODO Keep double doors in sync
 
         if (action == Action.OPEN_AND_CLOSE || protection.hasFlag(Flag.Type.AUTOCLOSE)) {
             // Abuse the fact that we still use final variables inside the task

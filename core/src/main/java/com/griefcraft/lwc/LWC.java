@@ -115,6 +115,7 @@ import com.griefcraft.util.config.Configuration;
 import com.griefcraft.util.locale.LocaleUtil;
 import com.griefcraft.util.matchers.DoubleChestMatcher;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -257,7 +258,7 @@ public class LWC {
                 locale = materialName;
             }
 
-            return StringUtil.capitalizeFirstLetter(locale);
+            return WordUtils.capitalize(locale.replace("_", " "));
         }
 
         return "";
