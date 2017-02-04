@@ -28,20 +28,43 @@
 
 package com.griefcraft.lwc;
 
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
+import org.mcstats.Metrics;
+
 import com.griefcraft.cache.ProtectionCache;
 import com.griefcraft.integration.ICurrency;
 import com.griefcraft.integration.IPermissions;
-import com.griefcraft.integration.currency.BOSECurrency;
-import com.griefcraft.integration.currency.EssentialsCurrency;
 import com.griefcraft.integration.currency.NoCurrency;
 import com.griefcraft.integration.currency.VaultCurrency;
-import com.griefcraft.integration.currency.iConomy5Currency;
-import com.griefcraft.integration.currency.iConomy6Currency;
-import com.griefcraft.integration.permissions.BukkitPermissions;
-import com.griefcraft.integration.permissions.PEXPermissions;
 import com.griefcraft.integration.permissions.SuperPermsPermissions;
 import com.griefcraft.integration.permissions.VaultPermissions;
-import com.griefcraft.integration.permissions.bPermissions;
 import com.griefcraft.io.BackupManager;
 import com.griefcraft.listeners.LWCMCPCSupport;
 import com.griefcraft.migration.ConfigPost300;
@@ -114,35 +137,6 @@ import com.griefcraft.util.UUIDRegistry;
 import com.griefcraft.util.config.Configuration;
 import com.griefcraft.util.locale.LocaleUtil;
 import com.griefcraft.util.matchers.DoubleChestMatcher;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
-import org.mcstats.Metrics;
-
-import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class LWC {
 
@@ -639,13 +633,13 @@ public class LWC {
         }
 
         // support for old protection dbs that do not contain the block id
-        if (block != null && (protection.getBlockId() <= 0 && block.getTypeId() != protection.getBlockId())) {
+        if (protection.getBlockId() <= 0 && block.getTypeId() != protection.getBlockId()) {
             protection.setBlockId(block.getTypeId());
             protection.save();
         }
 
         // multi-world, update old protections
-        if (block != null && (protection.getWorld() == null || !block.getWorld().getName().equals(protection.getWorld()))) {
+        if (protection.getWorld() == null || !block.getWorld().getName().equals(protection.getWorld())) {
             protection.setWorld(block.getWorld().getName());
             protection.save();
         }
@@ -1526,12 +1520,6 @@ public class LWC {
 
         if (resolvePlugin("Vault") != null) {
             permissions = new VaultPermissions();
-        } else if (resolvePlugin("PermissionsBukkit") != null) {
-            permissions = new BukkitPermissions();
-        } else if (resolvePlugin("PermissionsEx") != null) {
-            permissions = new PEXPermissions();
-        } else if (resolvePlugin("bPermissions") != null) {
-            permissions = new bPermissions();
         }
 
         // Currency init
@@ -1539,27 +1527,6 @@ public class LWC {
 
         if (resolvePlugin("Vault") != null) {
             currency = new VaultCurrency();
-        } else if (resolvePlugin("iConomy") != null) {
-            // We need to figure out which iConomy plugin we have...
-            Plugin plugin = resolvePlugin("iConomy");
-
-            // get the class name
-            String className = plugin.getClass().getName();
-
-            // check for the iConomy5 package
-            try {
-                if (className.startsWith("com.iConomy")) {
-                    currency = new iConomy5Currency();
-                } else {
-                    // iConomy 6!
-                    currency = new iConomy6Currency();
-                }
-            } catch (NoClassDefFoundError e) {
-            }
-        } else if (resolvePlugin("BOSEconomy") != null) {
-            currency = new BOSECurrency();
-        } else if (resolvePlugin("Essentials") != null) {
-            currency = new EssentialsCurrency();
         }
 
         // plugin.getUpdater().init();

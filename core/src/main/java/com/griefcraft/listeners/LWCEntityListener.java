@@ -28,23 +28,18 @@
 
 package com.griefcraft.listeners;
 
-import com.griefcraft.lwc.LWC;
-import com.griefcraft.lwc.LWCPlugin;
-import com.griefcraft.model.Flag;
-import com.griefcraft.model.Protection;
-import com.nitnelave.CreeperHeal.config.CreeperConfig;
-import com.nitnelave.CreeperHeal.config.WorldConfig;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityBreakDoorEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
-import org.bukkit.plugin.Plugin;
+
+import com.griefcraft.lwc.LWC;
+import com.griefcraft.lwc.LWCPlugin;
+import com.griefcraft.model.Flag;
+import com.griefcraft.model.Protection;
 
 public class LWCEntityListener implements Listener {
 
@@ -123,46 +118,10 @@ public class LWCEntityListener implements Listener {
 
             if (protection != null) {
                 boolean ignoreExplosions = Boolean.parseBoolean(lwc.resolveProtectionConfiguration(protection.getBlock(), "ignoreExplosions"));
-
                 if (ignoreExplosions || protection.hasFlag(Flag.Type.ALLOWEXPLOSIONS)) {
-                    // If creeper heal is active for the block, halt all thrusters!
-                    if (isCreeperHealActive(event.getEntity())) {
-                        break;
-                    }
-
                     protection.remove();
                 }
             }
         }
     }
-
-    /**
-     * Check if the CreeperHeal plugin is active. If it is, we shouldn't remove protections
-     *
-     * @return
-     */
-    private boolean isCreeperHealActive(Entity entity) {
-        if (entity == null) {
-            return false;
-        }
-
-        Plugin creeperHealPlugin = plugin.getServer().getPluginManager().getPlugin("CreeperHeal");
-
-        if (creeperHealPlugin != null) {
-            WorldConfig worldConfig = CreeperConfig.loadWorld(entity.getWorld());
-
-            if (worldConfig == null) {
-                return false; // Uh-oh?
-            }
-
-            if (entity instanceof Creeper) {
-                return worldConfig.creepers;
-            } else if (entity instanceof TNTPrimed) {
-                return worldConfig.tnt;
-            }
-        }
-
-        return false;
-    }
-
 }
