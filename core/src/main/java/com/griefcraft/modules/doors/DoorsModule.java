@@ -33,6 +33,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
 
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.model.Flag;
@@ -107,6 +108,11 @@ public class DoorsModule extends JavaModule {
     public void onProtectionInteract(LWCProtectionInteractEvent event) {
         if (event.getResult() == Result.CANCEL || !isEnabled()) {
             return;
+        }
+
+        // Ignore the off-hand
+        if (event.getEvent().getHand() != EquipmentSlot.HAND) {
+        	return;
         }
 
         // The more important check
