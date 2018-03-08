@@ -28,6 +28,7 @@
 
 package com.griefcraft.lwc;
 
+import com.griefcraft.bukkit.EntityBlock;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -132,6 +133,8 @@ import com.griefcraft.util.*;
 import com.griefcraft.util.config.Configuration;
 import com.griefcraft.util.locale.LocaleUtil;
 import com.griefcraft.util.matchers.DoubleChestMatcher;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 
 public class LWC {
 
@@ -226,12 +229,29 @@ public class LWC {
     }
 
     /**
+     * Get a string representation of a block's material
+     *
+     * @param block
+     * @return
+     */
+    public static String materialToString(Block block) {
+		if(block.getTypeId() > EntityBlock.ENTITY_BLOCK_ID) {
+			return entityToString(EntityType.fromId(block.getTypeId() - EntityBlock.ENTITY_BLOCK_ID));
+		}
+        return materialToString(block.getType());
+    }
+
+
+    /**
      * Get a string representation of a block type
      *
      * @param id
      * @return
      */
     public static String materialToString(int id) {
+		if(id > EntityBlock.ENTITY_BLOCK_ID) {
+			return entityToString(EntityType.fromId(id - EntityBlock.ENTITY_BLOCK_ID));
+		}
         return materialToString(Material.getMaterial(id));
     }
 
@@ -258,7 +278,30 @@ public class LWC {
 
         return "";
     }
+    /**
+     * Get a string representation of an entity
+     *
+     * @param type
+     * @return
+     */
+    public static String entityToString(EntityType type) {
+        if (type != null) {
+            String materialName = type.name().toLowerCase();
 
+            // attempt to match the locale
+            String locale = LWC.getInstance().getPlugin().getMessageParser().parseMessage(materialName.toLowerCase());
+
+            // if it starts with UNKNOWN_LOCALE, use the default material name
+            if (locale == null) {
+				locale = materialName;
+            }
+
+            return WordUtils.capitalize(locale.replace("_", " "));
+        }
+
+        return "";
+    }
+	
     /**
      * Normalize a name to a more readable & usable form.
      * <p/>
@@ -564,13 +607,13 @@ public class LWC {
     public List<Protection> findAdjacentProtectionsOnAllSides(Block block, Block... ignore) {
         BlockFace[] faces = new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN};
         List<Block> ignoreList = Arrays.asList(ignore);
-        List<Protection> found = new ArrayList<Protection>();
+        List<Protection> found = new ArrayList<>();
 
         for (BlockFace face : faces) {
             Protection protection;
             Block adjacentBlock = block.getRelative(face);
 
-            if (!ignoreList.contains(adjacentBlock.getLocation()) && (protection = findProtection(adjacentBlock.getLocation())) != null) {
+            if (!ignoreList.contains(adjacentBlock) && (protection = findProtection(adjacentBlock.getLocation())) != null) {
                 found.add(protection);
             }
         }
@@ -700,6 +743,18 @@ public class LWC {
         return hasAccess;
     }
 
+	/**
+	 * Enforce access to a protected entity
+	 * @param player
+	 * @param protection
+	 * @param entity
+	 * @param hasAccess
+	 * @return true if the player was granted access
+	 */
+	public boolean enforceAccess(Player player, Protection protection, Entity entity, boolean hasAccess) {
+		return enforceAccess(player, protection, new EntityBlock(entity), hasAccess);
+	}
+	
     /**
      * Check if a player has the ability to access a protection
      *
@@ -918,16 +973,6 @@ public class LWC {
         for (String line : message) {
             sender.sendMessage(line);
         }
-    }
-
-    /**
-     * Get a string representation of a block's material
-     *
-     * @param block
-     * @return
-     */
-    public static String materialToString(Block block) {
-        return materialToString(block.getType());
     }
 
     /**
@@ -1341,6 +1386,13 @@ public class LWC {
      * @return
      */
     public boolean isProtectable(Block block) {
+		if(block == null) {
+			return false;
+		} else if(block.getTypeId() > EntityBlock.ENTITY_BLOCK_ID) {
+			EntityType type = EntityType.fromId(block.getTypeId() - EntityBlock.ENTITY_BLOCK_ID);
+			return type == null ? false : Boolean.parseBoolean(resolveProtectionConfiguration(type, "enabled"));
+		}
+		
         Material material = block.getType();
 
         if (material == null) {
@@ -1365,7 +1417,61 @@ public class LWC {
 
         return Boolean.parseBoolean(resolveProtectionConfiguration(state, "enabled"));
     }
+	
+    /**
+     * Check an entity to see if it is protectable
+     *
+     * @param state
+     * @return
+     */
+    public boolean isProtectable(EntityType state) {
+        if (state == null) {
+            return false;
+        }
 
+        return Boolean.parseBoolean(resolveProtectionConfiguration(state, "enabled"));
+    }
+
+    /**
+     * Get the appropriate config value for the entity (protections.entity.node)
+     *
+     * @param entity
+     * @param node
+     * @return
+     */
+    public String resolveProtectionConfiguration(EntityType entity, String node) {
+        String cacheKey = "ent-" + entity.toString() + "-" + node;
+        if (protectionConfigurationCache.containsKey(cacheKey)) {
+            return protectionConfigurationCache.get(cacheKey);
+        }
+
+        List<String> names = new ArrayList<>();
+
+        String materialName = entity.toString().toLowerCase();
+
+        // add the name & the block id
+        names.add(materialName);
+        names.add(entity.getTypeId() + "");
+
+        // Add the wildcards last so it can be overriden
+        names.add("*");
+		
+		// load default
+        String value = configuration.getString("protections." + node);
+		
+		// look for this specific item's setting
+        for (String name : names) {
+            String temp = configuration.getString("protections.entities." + name + "." + node);
+
+            if (temp != null && !temp.isEmpty()) {
+                value = temp;
+            }
+        }
+		
+        protectionConfigurationCache.put(cacheKey, value);
+        return value;
+    }
+	
     /**
      * Get the appropriate config value for the block (protections.block.node)
      *
@@ -1374,6 +1480,10 @@ public class LWC {
      * @return
      */
     public String resolveProtectionConfiguration(Block block, String node) {
+		if(block.getTypeId() >= EntityBlock.ENTITY_BLOCK_ID) {
+			EntityType et = EntityType.fromId(block.getTypeId() - EntityBlock.ENTITY_BLOCK_ID);
+			return et == null ? null : resolveProtectionConfiguration(et, node);
+		}
         Material material = block.getType();
         String cacheKey = block.getData() + "-" + material.toString() + "-" + node;
         if (protectionConfigurationCache.containsKey(cacheKey)) {
@@ -1448,6 +1558,10 @@ public class LWC {
         names.add("*");
         names.add(material.getId() + ":*");
 
+        if (materialName.contains("_")) { // Prefix wildcarding for shulker boxes & gates
+        	names.add("*_" + materialName.substring(materialName.indexOf("_") + 1));
+        }
+		
         String value = configuration.getString("protections." + node);
 
         for (String name : names) {
