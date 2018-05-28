@@ -466,15 +466,15 @@ public class Protection {
     public Flag getFlag(Flag.Type type) {
         return flags.get(type);
     }
-
-    /**
-     * Get a copy of the flags for the current protection
-     *
-     * @return
-     */
-    public Map<Flag.Type, Flag> getFlags() {
-        return Collections.unmodifiableMap(flags);
-    }
+	
+	/**
+	 * Get a copy of the flags for the current protection
+	 * 
+	 * @return 
+	 */
+	public Map<Flag.Type, Flag> getFlags() {
+		return Collections.unmodifiableMap(flags);
+	}
 
     /**
      * Add a flag to the protection
@@ -938,8 +938,10 @@ public class Protection {
      * @return the block representing the protection in the world
      */
     public Block getBlock() {
-        if (cachedBlock != null || getBlockId() > EntityBlock.ENTITY_BLOCK_ID) {
+        if (cachedBlock != null) {
             return cachedBlock;
+        } else if(getBlockId() > EntityBlock.ENTITY_BLOCK_ID) {
+            return cachedBlock = new EntityBlock(world, getBlockId(), x);
         }
 
         World world = getBukkitWorld();
