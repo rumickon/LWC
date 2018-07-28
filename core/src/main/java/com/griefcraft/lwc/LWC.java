@@ -51,6 +51,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Furnace;
+import org.bukkit.block.data.type.Chest;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.ItemFrame;
@@ -249,15 +250,13 @@ public class LWC {
 
     /**
      * Get a string representation of a block type
-     *
-     * @param id
-     * @return
      */
+    @Deprecated
     public static String materialToString(int id) {
         if (id > EntityBlock.ENTITY_BLOCK_ID) {
             return entityToString(EntityType.fromId(id - EntityBlock.ENTITY_BLOCK_ID));
         }
-        return materialToString(Material.getMaterial(id));
+        return materialToString(LegacyMaterials.getNewMaterial(id));
     }
 
     /**
@@ -345,35 +344,16 @@ public class LWC {
             return;
         }
 
+        Chest chest = (Chest) block.getBlockData();
+        chest.setFacing(face);
+        block.setBlockData(chest);
+
         // Is there a double chest?
         Block doubleChest = findAdjacentDoubleChest(block);
-
-        // Calculate the data byte to set
-        byte data = 0;
-
-        switch (face) {
-            case NORTH:
-                data = 4;
-                break;
-
-            case SOUTH:
-                data = 5;
-                break;
-
-            case EAST:
-                data = 2;
-                break;
-
-            case WEST:
-                data = 3;
-                break;
-        }
-
-        // set the data for both sides of the chest
-        block.setData(data);
-
         if (doubleChest != null) {
-            doubleChest.setData(data);
+            Chest other = (Chest) doubleChest.getBlockData();
+            other.setFacing(face);
+            doubleChest.setBlockData(other);
         }
     }
 
@@ -514,7 +494,7 @@ public class LWC {
 
             if (DoubleChestMatcher.PROTECTABLES_CHESTS.contains(block.getType())) {
                 doubleChestBlock = findAdjacentDoubleChest(block);
-            } else if (block.getType() == Material.FURNACE || block.getType() == Material.BURNING_FURNACE) {
+            } else if (block.getType() == Material.FURNACE) {
                 Inventory inventory = holder.getInventory();
 
                 if (inventory.getItem(0) != null && inventory.getItem(1) != null) {
@@ -686,9 +666,11 @@ public class LWC {
             return true;
         }
 
+        int legacyId = LegacyMaterials.getOldId(block.getType());
+
         // support for old protection dbs that do not contain the block id
-        if (protection.getBlockId() <= 0 && block.getTypeId() != protection.getBlockId()) {
-            protection.setBlockId(block.getTypeId());
+        if (protection.getBlockId() <= 0 && legacyId != protection.getBlockId()) {
+            protection.setBlockId(legacyId);
             protection.save();
         }
 
@@ -832,7 +814,8 @@ public class LWC {
                     int item = Integer.parseInt(permission.getName());
 
                     // Are they wielding it?
-                    if (player.getItemInHand().getTypeId() == item) {
+                    int legacyId = LegacyMaterials.getOldId(player.getInventory().getItemInMainHand().getType());
+                    if (legacyId == item) {
                         return true;
                     }
                 }
@@ -1400,10 +1383,11 @@ public class LWC {
     public boolean isProtectable(Block block) {
         if (block == null) {
             return false;
-        } else if (block.getTypeId() > EntityBlock.ENTITY_BLOCK_ID) {
-            EntityType type = EntityType.fromId(block.getTypeId() - EntityBlock.ENTITY_BLOCK_ID);
-            return type == null ? false : Boolean.parseBoolean(resolveProtectionConfiguration(type, "enabled"));
+        } else if (block instanceof EntityBlock) {
+            EntityType type = ((EntityBlock) block).getEntityType();
+            return type != null && Boolean.parseBoolean(resolveProtectionConfiguration(type, "enabled"));
         }
+
         Material material = block.getType();
 
         if (material == null) {

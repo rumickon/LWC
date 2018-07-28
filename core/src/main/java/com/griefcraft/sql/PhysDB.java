@@ -28,6 +28,12 @@
 
 package com.griefcraft.sql;
 
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
 import com.griefcraft.cache.LRUCache;
 import com.griefcraft.cache.ProtectionCache;
 import com.griefcraft.lwc.LWC;
@@ -37,23 +43,15 @@ import com.griefcraft.model.Permission;
 import com.griefcraft.model.Protection;
 import com.griefcraft.modules.limits.LimitsModule;
 import com.griefcraft.scripting.Module;
+import com.griefcraft.util.LegacyMaterials;
 import com.griefcraft.util.UUIDRegistry;
 import com.griefcraft.util.config.Configuration;
+
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 
 public class PhysDB extends Database {
 
@@ -211,12 +209,17 @@ public class PhysDB extends Database {
         return count;
     }
 
+    public int getProtectionCount(String player, Material blockType) {
+        return getProtectionCount(player, LegacyMaterials.getOldId(blockType));
+    }
+
     /**
      * Get the amount of chests a player has of a specific block id
      *
      * @param player
      * @return the amount of protections they have of blockId
      */
+    @Deprecated
     public int getProtectionCount(String player, int blockId) {
         int count = 0;
 
@@ -1113,37 +1116,11 @@ public class PhysDB extends Database {
         return protections;
     }
 
-    /**
-     * Register a protection
-     *
-     * @param blockId
-     * @param type
-     * @param world
-     * @param player
-     * @param data
-     * @param x
-     * @param y
-     * @param z
-     * @return
-     */
-    @Deprecated
-    public Protection registerProtection(int blockId, int type, String world, String player, String data, int x, int y, int z) {
-        return registerProtection(blockId, Protection.Type.values()[type], world, player, data, x, y, z);
+    public Protection registerProtection(Material blockType, Protection.Type type, String world, String player, String data, int x, int y, int z) {
+        return registerProtection(LegacyMaterials.getOldId(blockType), type, world, player, data, x, y, z);
     }
 
-    /**
-     * Register a protection
-     *
-     * @param blockId
-     * @param type
-     * @param world
-     * @param player
-     * @param data
-     * @param x
-     * @param y
-     * @param z
-     * @return
-     */
+    @Deprecated
     public Protection registerProtection(int blockId, Protection.Type type, String world, String player, String data, int x, int y, int z) {
         ProtectionCache cache = LWC.getInstance().getProtectionCache();
 

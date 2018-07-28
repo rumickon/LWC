@@ -198,7 +198,7 @@ public class WorldGuard extends JavaModule {
                         }
 
                         // Protect it!
-                        lwc.getPhysicalDatabase().registerProtection(block.getTypeId(), Protection.Type.PRIVATE, world.getName(),
+                        lwc.getPhysicalDatabase().registerProtection(block.getType(), Protection.Type.PRIVATE, world.getName(),
                                 ownerName, "", x, y, z);
                         registered ++;
                     }
